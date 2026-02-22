@@ -1,0 +1,33 @@
+name: Issue Label Comment
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for wontfix label
+        if: github.event.label.name == 'wontfix'
+        run: |
+          echo 'Adding comment for wontfix label'
+          body='After review, we have decided not to address this issue at this time.'
+          echo "COMMENT_BODY=$body" >> $GITHUB_ENV
+      - name: Check for enhancement label
+        if: github.event.label.name == 'enhancement'
+        run: |
+          echo 'Adding comment for enhancement label'
+          body='Thanks for the enhancement suggestion! We appreciate your input.'
+          echo "COMMENT_BODY=$body" >> $GITHUB_ENV
+      - name: Add comment to issue
+        if: env.COMMENT_BODY != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: process.env.COMMENT_BODY
+            })
